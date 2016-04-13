@@ -1,71 +1,68 @@
-function Wall(size x, y) {
-  THREE.Mesh.call(this,
-  new THREE.BoxGeometry( size, size, size ),
-          new TREE.MeshNormalMaterial());
-  this.size = size;
-  this.position.x = x;
-  this.position.y = y;
+function Sensor(position, direction) {
+  THREE.Raycaster.call(this, position, direction);
+  this.colision = false;
 }
-Wall.prototype = new THREE.Mesh();
+Sensor.prototype = new THREE.Raycaster();
 
-Environment.prototype.setMap = function(map) {
-  var _offset = Math.floor(map.length/2);
-  
-  for ( var i = 0; i < map.length ; i++)
-  for ( var j = 0; j < map.length ; j++) {
-    if (map[i][j] === "x")
-    this.add( new Wall( 1, j - _offset, -(i-_offset) ) ):
-    else if (map[i][j] === "r")
-    this.add( new Robot(0.5, j-_offset, -(i-offset) ) );
-  }
+function Robot(size,x,y){
+Agent.call(this,x,y);
+this.sensor= new Sensor();
+this.actuator= new THREE.Mesh(
+new THREE.BoxGeometry(size,size,size),
+new THREE.MeshBasicMaterial({color:'#aa0000'}));
+this.actuator.commands=[];
+this.add(this.actuator);
 }
 
-function setup() {
-  var mapa = new Array();
-  mapa[0]  = "xxxxxxxxxxxxxxxxxxxxxxxxx";
-  mapa[1]  = "x                       x";
-  mapa[2]  = "x                       x";
-  mapa[3]  = "x                       x";
-  mapa[4]  = "x                       x";
-  mapa[5]  = "x                       x";
-  mapa[6]  = "x                       x";
-  mapa[7]  = "x                       x";
-  mapa[8]  = "xxxx  xxxxxxxxxxxxxxxxxxx";
-  mapa[9]  = "x                       x";
-  mapa[10] = "x                       x";
-  mapa[11] = "x                       x";
-  mapa[12] = "x                       x";
-  mapa[13] = "x                       x";
-  mapa[13] = "x                       x";
-  mapa[13] = "x                       x";
-  mapa[13] = "x                       x";
-  mapa[13] = "x                       x";
-  mapa[13] = "x                       x";
-  mapa[13] = "x                       x";
-  mapa[13] = "x                       x";
-  mapa[13] = "x                       x";
-  mapa[13] = "x                       x";
-  mapa[13] = "x                       x";
-  mapa[24] = "xxxxxxxxxxxxxxxxxxxxxxxxx";
-  
-  environment = new Environment();
-  
-  environment.setMap(mapa);
-  
-  camera = new THREE.PerspectiveCamera();
-  camera.position.z = 30;
-  
-  renderer = new THREE.WebGLRenderer();
-  renderer.setSize( window.innerHeight*.95, window.innerHeight*.95 );
-  document.body.appendChild( renderer.domElement );
-  
-  environment.add( camera );
-}
+Robot.prototype=new Agent();
 
-function loop() {
-  requestAnimationFrame( loop );
-  
-  environment.sense();
-  environment.plan();
-  environment.
+Robot.prototype.sense= function(environment){
+this.sensor.set(this.position,
+new THREE.Vector3(Math.cos(this.rotation.z),
+Math.sin(this.rotation.z),
+0));
+var obstaculo= this.sensor.intersectObjects(environment.children,true);
+if((obstaculo.length>0 && 
+(obstaculo[0].distance<=.5)))
+this.sensor.colision=true;
+else
+this.sensor.colision=false;
+};
+Robot.prototype.plan=function (environment){
+this.actuator.commands=[];
+if (this.sensor.colision==true)
+this.actuator.commands.push('rotateCCW');
+else
+this.actuator.commands.push('goStraight');
+};
+
+Robot.protoype.act=function(environment){
+ var command=this.actuator.commands.pop();
+ if(command===undefined)
+ console.log('Undefined Command');
+ else if(command in this.operations)
+ this.operations[command](this);
+ else
+ console.log('Unknown Command');
+};
+
+Robot.prototype.operations={}
+
+Robot.prototype.operations.goStraight=function(robot,distance){
+ if(distance===undefined)
+ distance=.05;
+ robot.position.x+=distance*Math.cos(robot.rotation.z);
+ robot.position.y+=distance*Math.sin(robot.rotation.z);
+};
+
+Robot.prototype.operations.rotateCW=function(robot,angle){
+ if(angle===undefined)
+ angle=Math.PI/2;
+ robot.rotation.z+=angle;
+};
+
+Robot.prototype.operations.rotateCCW=function(robot,angle){
+ if(angle===undefined)
+ angle=Math.PI/2;
+ robot.rotation.z+=angle;
 }

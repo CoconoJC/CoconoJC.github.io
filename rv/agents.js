@@ -14,8 +14,10 @@ function Environment() {
   THREE.Scene.call(this);
 }
 
+//Para nuestro caso, el prototipo de un entorno es Scene()
 Environment.prototype = new THREE.Scene();
 
+//La interfaz del entorno y los agentes estara dada por los siguientes metodos
 Environment.prototype.sense = function() {
   for ( var i = 0; i < this.children.length; i++ ) {
     if (this.children[i].sense !== undefined)
